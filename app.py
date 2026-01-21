@@ -256,3 +256,59 @@ def init_db():
 
     conn.commit()
     conn.close()
+
+    # 添加测试患者数据
+    def add_test_patients():
+        conn = sqlite3.connect(app.config['DATABASE'])
+        c = conn.cursor()
+
+        patients = [
+            ('张伟', '13800138000', generate_password_hash('password123'), 42, '男', 'O型', '175cm', '72kg',
+             '轻度高血压',
+             '青霉素、花粉'),
+            ('李娜', '13900139000', generate_password_hash('abc123'), 35, '女', 'A型', '162cm', '55kg', 'II型糖尿病',
+             '无'),
+            ('王强', '13700137000', generate_password_hash('pass1234'), 58, '男', 'B型', '178cm', '80kg', '冠心病',
+             '海鲜'),
+            ('赵敏', '13600136000', generate_password_hash('securepwd'), 29, '女', 'AB型', '168cm', '58kg', '健康',
+             '无'),
+            ('刘洋', '13500135000', generate_password_hash('mypassword'), 65, '男', 'O型', '170cm', '68kg',
+             '慢性支气管炎',
+             '花粉、尘螨')
+        ]
+
+        try:
+            c.executemany('''
+                INSERT INTO patients (name, phone, password, age, gender, blood_type, height, weight, conditions, allergies)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', patients)
+            conn.commit()
+        except sqlite3.IntegrityError:
+            pass  # 数据已存在
+
+        # 添加测试就诊记录
+        for patient_id in range(1, 6):
+            records = [
+                (patient_id, '2023-10-15', '心血管内科', '王主任', '患者主诉近期偶有头晕现象，血压测量为145/92mmHg'),
+                (patient_id, '2023-08-22', '体检中心', '李医生', '年度体检结果显示：血脂略高（LDL 3.5mmol/L）'),
+                (patient_id, '2023-06-10', '呼吸科', '张医生', '患者因季节性花粉过敏就诊，症状包括打喷嚏、流涕')
+            ]
+            c.executemany('''
+                INSERT INTO medical_records (patient_id, date, department, doctor, description)
+                VALUES (?, ?, ?, ?, ?)
+            ''', records)
+
+        # 添加测试检查指标
+        for patient_id in range(1, 6):
+            metrics = [
+                (patient_id, '血压', '142/88', '90-120/60-80', 'mmHg', '2023-10-15', 'warning'),
+                (patient_id, '空腹血糖', '5.8', '3.9-6.1', 'mmol/L', '2023-10-15', 'normal'),
+                (patient_id, '总胆固醇', '5.3', '<5.2', 'mmol/L', '2023-08-22', 'warning')
+            ]
+            c.executemany('''
+                INSERT INTO check_metrics (patient_id, item, result, reference_range, unit, date, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', metrics)
+
+        conn.commit()
+        conn.close()
