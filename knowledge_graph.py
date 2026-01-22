@@ -1818,3 +1818,4 @@ if __name__ == "__main__":
     print("\n叙述文本:")
     narrative = kg.generate_narrative(kg_results)
     print(narrative)
+
